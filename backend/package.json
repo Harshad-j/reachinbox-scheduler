@@ -11,7 +11,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy --schema prisma/schema.prisma",
     "seed:senders": "tsx ../scripts/seed-senders.ts",
-    "build": "tsc",
+    "build": "prisma generate --schema prisma/schema.prisma && tsc",
     "db:dev": "prisma migrate dev --schema prisma/schema.prisma"
   },
   "dependencies": {

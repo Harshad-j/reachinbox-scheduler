@@ -1,1 +1,15 @@
-{"name":"reachinbox","private":true,"type":"module","workspaces":["backend","frontend"],"scripts":{"typecheck":"npm run typecheck --workspaces --if-present","lint":"npm run lint --workspaces --if-present","test":"npm run test --workspaces --if-present"}}
+{
+  "name": "reachinbox",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "postinstall": "npm run db:generate --workspace backend"
+  }
+}
