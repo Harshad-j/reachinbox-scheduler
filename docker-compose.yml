@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: reachinbox
+      POSTGRES_PASSWORD: reachinbox
+      POSTGRES_DB: reachinbox
+    ports: ["5432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reachinbox -d reachinbox"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports: ["6379:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    ports: ["9200:9200"]
+    volumes: ["elasticsearch_data:/usr/share/elasticsearch/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9200/_cluster/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  api:
+    build: .
+    command: ["sh", "-c", "npm run db:generate --workspace backend && npm run db:migrate --workspace backend && node backend/dist/server.js"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://reachinbox:reachinbox@postgres:5432/reachinbox
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    ports: ["4000:4000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      elasticsearch: { condition: service_healthy }
+  worker:
+    build: .
+    command: ["node", "backend/dist/worker.js"]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://reachinbox:reachinbox@postgres:5432/reachinbox
+      REDIS_URL: redis://redis:6379
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    depends_on:
+      api: { condition: service_started }
+      redis: { condition: service_healthy }
+      postgres: { condition: service_healthy }
+  frontend:
+    build: .
+    command: ["npm", "run", "dev", "--workspace", "frontend", "--", "--host", "0.0.0.0"]
+    environment:
+      VITE_API_PROXY: http://api:4000
+    ports: ["5173:5173"]
+    depends_on: [api]
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:

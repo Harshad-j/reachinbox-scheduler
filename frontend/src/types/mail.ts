@@ -1,0 +1,21 @@
+export type User = { id: string; name: string; email: string; avatarUrl?: string | null };
+export type EmailRow = {
+  id: string;
+  batchId: string;
+  batch?: { status: string };
+  batchStatus?: string;
+  recipient: string;
+  subject: string;
+  body: string;
+  scheduledAt: string;
+  sentAt: string | null;
+  status: string;
+  previewUrl: string | null;
+  lastError: string | null;
+};
+export type Folder = "scheduled" | "sent";
+export type ToastState = { message: string; kind: "success" | "error" } | null;
+export type EmailPage = { items: EmailRow[]; total: number; page: number; pageSize: number };
+export type SenderSummary = { id: string; email: string; circuitOpenUntil: string | null; deliveryMode: "preview" | "smtp" };
+export type SenderList = { items: SenderSummary[]; total: number };
+export type SlackStatus = { connected: boolean; connection?: { teamName: string } };

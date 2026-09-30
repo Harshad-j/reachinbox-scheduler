@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url = env("DATABASE_URL")
+}
+enum BatchStatus {
+ active
+ paused
+ cancelled
+ completed
+}
+enum EmailStatus {
+ scheduled
+ sending
+ sent
+ failed
+ cancelled
+ delivery_unknown
+}
+enum OutboxType {
+ ENQUEUE_EMAIL
+ INDEX_EMAIL
+}
+enum OutboxStatus {
+ pending
+ done
+}
+
+model User {
+  id String @id @default(cuid())
+  googleId String @unique
+  email String @unique
+  name String
+  avatarUrl String?
+  createdAt DateTime @default(now())
+  senders Sender[]
+  batches Batch[]
+  slackConnection SlackConnection?
+}
+model Sender {
+  id String @id @default(cuid())
+  userId String?
+  user User? @relation(fields:[userId], references:[id])
+  email String @unique
+  smtpHost String
+  smtpPort Int
+  smtpUser String
+  smtpPass String
+  isActive Boolean @default(true)
+  consecutiveFailures Int @default(0)
+  circuitOpenUntil DateTime?
+  createdAt DateTime @default(now())
+  emails Email[]
+}
+model Batch {
+  id String @id @default(cuid())
+  userId String
+  user User @relation(fields:[userId], references:[id])
+  subject String
+  body String
+  startTime DateTime
+  delayBetweenMs Int
+  hourlyLimit Int?
+  totalCount Int
+  idempotencyKey String?
+  status BatchStatus @default(active)
+  createdAt DateTime @default(now())
+  emails Email[]
+  @@unique([userId,idempotencyKey])
+}
+model Email {
+  id String @id @default(cuid())
+  batchId String
+  batch Batch @relation(fields:[batchId], references:[id], onDelete:Cascade)
+  senderId String
+  sender Sender @relation(fields:[senderId], references:[id])
+  recipient String
+  subject String
+  body String
+  scheduledAt DateTime
+  sentAt DateTime?
+  status EmailStatus @default(scheduled)
+  attempts Int @default(0)
+  smtpStartedAt DateTime?
+  lastError String?
+  messageId String?
+  previewUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([batchId,recipient])
+  @@index([status,scheduledAt])
+  @@index([senderId])
+}
+model Outbox {
+  id String @id @default(cuid())
+  type OutboxType
+  payload Json
+  status OutboxStatus @default(pending)
+  attempts Int @default(0)
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+  @@index([status,createdAt])
+}
+model SlackConnection {
+  id String @id @default(cuid())
+  userId String @unique
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  teamId String
+  teamName String
+  channelId String
+  encryptedCredential String
+  connectedAt DateTime @default(now())
+}

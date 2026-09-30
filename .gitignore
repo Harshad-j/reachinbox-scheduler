@@ -1,0 +1,12 @@
+node_modules/
+.npm-cache/
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+redis-backup-*/
+__codex_probe.tmp
+.codex_probe
