@@ -1,10 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "services": {
-    "app": {
-      "root": ".",
-      "runtime": "container"
-    },
     "backend": {
       "root": "backend",
       "framework": "express"
@@ -24,7 +20,7 @@
     {
       "source": "/(.*)",
       "destination": {
-        "service": "app"
+        "service": "frontend"
       }
     }
   ]
