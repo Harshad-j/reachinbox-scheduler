@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/server.mts",
     "worker": "tsx src/worker.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
